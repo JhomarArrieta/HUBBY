@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "228206520417",
+    "project_id": "hubby-compumovil",
+    "storage_bucket": "hubby-compumovil.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:228206520417:android:19efbb1f8d755fd863e220",
+        "android_client_info": {
+          "package_name": "co.edu.udea.hubby"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtA2d02BlbIvPHlrWiUIkkZRjRTYm5I3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
