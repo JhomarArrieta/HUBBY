@@ -3,45 +3,40 @@ package co.edu.udea.hubby
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.*
+import co.edu.udea.hubby.data.repository.AuthRepository
+import co.edu.udea.hubby.ui.auth.LoginScreen
+import co.edu.udea.hubby.ui.auth.RegisterScreen
 import co.edu.udea.hubby.ui.theme.HUBBYTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        val authRepository = AuthRepository()
+
         setContent {
             HUBBYTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                var currentScreen by remember {
+                    mutableStateOf(
+                        if (authRepository.isUserLoggedIn()) "home" else "login"
                     )
+                }
+
+                when (currentScreen) {
+                    "login" -> LoginScreen(
+                        onLoginSuccess = { currentScreen = "home" },
+                        onGoToRegister = { currentScreen = "register" }
+                    )
+                    "register" -> RegisterScreen(
+                        onRegisterSuccess = { currentScreen = "home" },
+                        onGoToLogin = { currentScreen = "login" }
+                    )
+                    "home" -> {
+                        // Aquí irá la pantalla principal en la Fase 3
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    HUBBYTheme {
-        Greeting("Android")
     }
 }
