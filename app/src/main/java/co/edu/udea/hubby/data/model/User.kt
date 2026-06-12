@@ -5,5 +5,6 @@ data class User(
     val name: String = "",
     val email: String = "",
     val career: String = "",
+    val campus: String = "Ciudad Universitaria",
     val createdAt: Long = System.currentTimeMillis()
 )

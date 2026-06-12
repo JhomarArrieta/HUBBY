@@ -7,6 +7,9 @@ import androidx.compose.runtime.*
 import co.edu.udea.hubby.data.repository.AuthRepository
 import co.edu.udea.hubby.ui.auth.LoginScreen
 import co.edu.udea.hubby.ui.auth.RegisterScreen
+import co.edu.udea.hubby.ui.events.CreateEventScreen
+import co.edu.udea.hubby.ui.events.EventDetailScreen
+import co.edu.udea.hubby.ui.events.EventsScreen
 import co.edu.udea.hubby.ui.theme.HUBBYTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,6 +25,7 @@ class MainActivity : ComponentActivity() {
                         if (authRepository.isUserLoggedIn()) "home" else "login"
                     )
                 }
+                var selectedEventId by remember { mutableStateOf("") }
 
                 when (currentScreen) {
                     "login" -> LoginScreen(
@@ -32,9 +36,29 @@ class MainActivity : ComponentActivity() {
                         onRegisterSuccess = { currentScreen = "home" },
                         onGoToLogin = { currentScreen = "login" }
                     )
-                    "home" -> {
-                        // Aquí irá la pantalla principal en la Fase 3
-                    }
+                    "home" -> EventsScreen(
+                        onLogout = {
+                            authRepository.logout()
+                            currentScreen = "login"
+                        },
+                        onCreateEvent = { currentScreen = "createEvent" },
+                        onEventClick = { id ->
+                            selectedEventId = id
+                            currentScreen = "eventDetail"
+                        }
+                    )
+                    "createEvent" -> CreateEventScreen(
+                        onEventCreated = { currentScreen = "home" },
+                        onBack = { currentScreen = "home" }
+                    )
+                    "eventDetail" -> EventDetailScreen(
+                        eventId = selectedEventId,
+                        onBack = { currentScreen = "home" },
+                        onEditEvent = { id ->
+                            selectedEventId = id
+                            currentScreen = "editEvent"
+                        }
+                    )
                 }
             }
         }
