@@ -154,6 +154,17 @@ class EventRepository {
         }
     }
 
+    suspend fun updateEvent(eventId: String, updatedFields: Map<String, Any>): Result<Unit> {
+        return try {
+            eventsCollection.document(eventId)
+                .update(updatedFields)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
 }
 

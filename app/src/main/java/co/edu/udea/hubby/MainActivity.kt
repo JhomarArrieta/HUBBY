@@ -8,9 +8,12 @@ import co.edu.udea.hubby.data.repository.AuthRepository
 import co.edu.udea.hubby.ui.auth.LoginScreen
 import co.edu.udea.hubby.ui.auth.RegisterScreen
 import co.edu.udea.hubby.ui.events.CreateEventScreen
+import co.edu.udea.hubby.ui.events.EditEventScreen
 import co.edu.udea.hubby.ui.events.EventDetailScreen
 import co.edu.udea.hubby.ui.events.EventsScreen
 import co.edu.udea.hubby.ui.theme.HUBBYTheme
+import co.edu.udea.hubby.ui.profile.ProfileScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +48,8 @@ class MainActivity : ComponentActivity() {
                         onEventClick = { id ->
                             selectedEventId = id
                             currentScreen = "eventDetail"
-                        }
+                        },
+                        onProfileClick = { currentScreen = "profile" }  // ← agrega esto
                     )
                     "createEvent" -> CreateEventScreen(
                         onEventCreated = { currentScreen = "home" },
@@ -57,6 +61,18 @@ class MainActivity : ComponentActivity() {
                         onEditEvent = { id ->
                             selectedEventId = id
                             currentScreen = "editEvent"
+                        }
+                    )
+                    "editEvent" -> EditEventScreen(
+                        eventId = selectedEventId,
+                        onEventUpdated = { currentScreen = "home" },
+                        onBack = { currentScreen = "eventDetail" }
+                    )
+                    "profile" -> ProfileScreen(
+                        onBack = { currentScreen = "home" },
+                        onEventClick = { id ->
+                            selectedEventId = id
+                            currentScreen = "eventDetail"
                         }
                     )
                 }

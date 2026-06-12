@@ -34,7 +34,8 @@ import java.util.*
 fun EventsScreen(
     onLogout: () -> Unit,
     onCreateEvent: () -> Unit,
-    onEventClick: (String) -> Unit
+    onEventClick: (String) -> Unit,
+    onProfileClick: () -> Unit
 ) {
     val eventRepository = remember { EventRepository() }
     val userRepository = remember { UserRepository() }
@@ -104,7 +105,8 @@ fun EventsScreen(
                 item {
                     HomeHeader(
                         campus = currentUser?.campus ?: "Ciudad Universitaria",
-                        onLogout = onLogout
+                        onLogout = onLogout,
+                        onProfileClick = onProfileClick
                     )
                 }
 
@@ -203,7 +205,7 @@ fun EventsScreen(
 }
 
 @Composable
-fun HomeHeader(campus: String, onLogout: () -> Unit) {
+fun HomeHeader(campus: String, onLogout: () -> Unit, onProfileClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -222,8 +224,13 @@ fun HomeHeader(campus: String, onLogout: () -> Unit) {
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = onLogout) {
-                    Text("Salir", color = Color.White)
+                Row {
+                    TextButton(onClick = onProfileClick) {
+                        Text("👤", color = Color.White)
+                    }
+                    TextButton(onClick = onLogout) {
+                        Text("Salir", color = Color.White)
+                    }
                 }
             }
             Spacer(Modifier.height(4.dp))
