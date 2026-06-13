@@ -55,6 +55,8 @@ fun EventsScreen(
             currentUser = userResult.getOrNull()
             val campus = currentUser?.campus ?: "Ciudad Universitaria"
 
+            eventRepository.updateExpiredEvents(campus)
+
             val eventsResult = eventRepository.getEventsByCampus(campus)
             val popularResult = eventRepository.getPopularEvents(campus)
 

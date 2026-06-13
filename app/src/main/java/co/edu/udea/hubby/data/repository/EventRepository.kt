@@ -165,6 +165,79 @@ class EventRepository {
         }
     }
 
+    // Marcar eventos pasados como finalizados automáticamente
+    suspend fun updateExpiredEvents(campus: String): Result<Unit> {
+        return try {
+            val now = System.currentTimeMillis()
+            val snapshot = eventsCollection
+                .whereEqualTo("campus", campus)
+                .whereEqualTo("status", "activo")
+                .whereLessThan("date", now)
+                .get()
+                .await()
+
+            snapshot.documents.forEach { doc ->
+                doc.reference.update("status", "finalizado")
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun rateEvent(eventId: String, userId: String, rating: Int): Result<Unit> {
+        return try {
+            val eventRef = eventsCollection.document(eventId)
+
+            // Actualizar rating del evento
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(eventRef)
+                val currentRating = snapshot.getDouble("rating")?.toFloat() ?: 0f
+                val ratingCount = snapshot.getLong("ratingCount")?.toInt() ?: 0
+                val newRatingCount = ratingCount + 1
+                val newRating = ((currentRating * ratingCount) + rating) / newRatingCount
+                val registeredCount = snapshot.getLong("registeredCount")?.toInt() ?: 0
+                val newPopularityScore = (newRating * 2) + registeredCount
+
+                transaction.update(eventRef, mapOf(
+                    "rating" to newRating,
+                    "ratingCount" to newRatingCount,
+                    "popularityScore" to newPopularityScore
+                ))
+            }.await()
+
+            // Actualizar el registro del usuario por separado (fuera de la transacción)
+            val regSnapshot = db.collection("registrations")
+                .whereEqualTo("eventId", eventId)
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            regSnapshot.documents.firstOrNull()?.reference?.update(
+                mapOf("rated" to true, "ratingGiven" to rating)
+            )?.await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            android.util.Log.e("RATE_ERROR", "Error al calificar: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    // Verificar si el usuario ya calificó
+    suspend fun hasUserRated(eventId: String, userId: String): Boolean {
+        return try {
+            val snapshot = db.collection("registrations")
+                .whereEqualTo("eventId", eventId)
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("rated", true)
+                .get()
+                .await()
+            !snapshot.isEmpty
+        } catch (e: Exception) {
+            false
+        }
+    }
 
 }
 

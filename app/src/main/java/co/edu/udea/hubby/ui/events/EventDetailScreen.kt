@@ -41,12 +41,19 @@ fun EventDetailScreen(
     var message by remember { mutableStateOf("") }
     var showCancelDialog by remember { mutableStateOf(false) }
 
+    var hasRated by remember { mutableStateOf(false) }
+    var selectedRating by remember { mutableStateOf(0) }
+    var showRatingDialog by remember { mutableStateOf(false) }
+
     // Cargar evento y estado de inscripción
     LaunchedEffect(eventId) {
         val eventResult = eventRepository.getEventById(eventId)
         if (eventResult.isSuccess) {
             event = eventResult.getOrNull()
             isRegistered = eventRepository.isUserRegistered(eventId, currentUserId)
+            if (isRegistered) {
+                hasRated = eventRepository.hasUserRated(eventId, currentUserId)
+            }
         }
         isLoading = false
     }
@@ -73,6 +80,71 @@ fun EventDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showCancelDialog = false }) { Text("No") }
+            }
+        )
+    }
+
+    if (showRatingDialog) {
+        AlertDialog(
+            onDismissRequest = { showRatingDialog = false },
+            title = { Text("Calificar evento") },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("¿Cómo estuvo el evento?",
+                        style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(16.dp))
+                    Row(horizontalArrangement = Arrangement.Center) {
+                        (1..5).forEach { star ->
+                            IconButton(onClick = { selectedRating = star }) {
+                                Text(
+                                    if (star <= selectedRating) "⭐" else "☆",
+                                    style = MaterialTheme.typography.headlineSmall
+                                )
+                            }
+                        }
+                    }
+                    if (selectedRating > 0) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            when (selectedRating) {
+                                1 -> "Muy malo 😞"
+                                2 -> "Regular 😐"
+                                3 -> "Bien 🙂"
+                                4 -> "Muy bien 😊"
+                                5 -> "Excelente! 🤩"
+                                else -> ""
+                            },
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (selectedRating > 0) {
+                            showRatingDialog = false
+                            scope.launch {
+                                actionLoading = true
+                                val result = eventRepository.rateEvent(
+                                    eventId, currentUserId, selectedRating
+                                )
+                                if (result.isSuccess) {
+                                    hasRated = true
+                                    event = eventRepository.getEventById(eventId).getOrNull()
+                                    message = "¡Gracias por tu calificación!"
+                                } else {
+                                    message = "Error al calificar"
+                                }
+                                actionLoading = false
+                            }
+                        }
+                    },
+                    enabled = selectedRating > 0
+                ) { Text("Enviar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRatingDialog = false }) { Text("Cancelar") }
             }
         )
     }
@@ -230,6 +302,20 @@ fun EventDetailScreen(
                                         else -> "🙌 Unirme"
                                     }
                                 )
+                            }
+
+                        }
+                        if (isRegistered && e.status == "finalizado") {
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = { showRatingDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !hasRated,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondary
+                                )
+                            ) {
+                                Text(if (hasRated) "✅ Ya calificaste este evento" else "⭐ Calificar evento")
                             }
                         }
                     }
