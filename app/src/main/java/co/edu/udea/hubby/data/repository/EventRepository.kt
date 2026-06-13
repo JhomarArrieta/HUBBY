@@ -65,10 +65,10 @@ class EventRepository {
         }
     }
 
-    suspend fun createEvent(event: Event): Result<Unit> {
+    suspend fun createEvent(event: Event): Result<String> {
         return try {
-            eventsCollection.add(event).await()
-            Result.success(Unit)
+            val docRef = eventsCollection.add(event).await()
+            Result.success(docRef.id)
         } catch (e: Exception) {
             Result.failure(e)
         }

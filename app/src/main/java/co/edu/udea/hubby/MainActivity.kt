@@ -13,6 +13,8 @@ import co.edu.udea.hubby.ui.events.EventDetailScreen
 import co.edu.udea.hubby.ui.events.EventsScreen
 import co.edu.udea.hubby.ui.theme.HUBBYTheme
 import co.edu.udea.hubby.ui.profile.ProfileScreen
+import co.edu.udea.hubby.ui.profile.EditProfileScreen
+
 
 
 class MainActivity : ComponentActivity() {
@@ -73,7 +75,12 @@ class MainActivity : ComponentActivity() {
                         onEventClick = { id ->
                             selectedEventId = id
                             currentScreen = "eventDetail"
-                        }
+                        },
+                        onEditProfile = { currentScreen = "editProfile" }  // ← agrega esto
+                    )
+                    "editProfile" -> EditProfileScreen(
+                        onProfileUpdated = { currentScreen = "profile" },
+                        onBack = { currentScreen = "profile" }
                     )
                 }
             }

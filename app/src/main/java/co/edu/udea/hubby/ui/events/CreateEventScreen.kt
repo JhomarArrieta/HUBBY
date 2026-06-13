@@ -20,6 +20,18 @@ import co.edu.udea.hubby.utils.categories
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import co.edu.udea.hubby.data.repository.StorageRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +78,13 @@ fun CreateEventScreen(onEventCreated: () -> Unit, onBack: () -> Unit) {
         calendar.get(Calendar.MINUTE),
         true
     )
+
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val storageRepository = remember { StorageRepository() }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> selectedImageUri = uri }
 
     Scaffold(
         topBar = {
@@ -174,6 +193,33 @@ fun CreateEventScreen(onEventCreated: () -> Unit, onBack: () -> Unit) {
                 Text(errorMessage, color = MaterialTheme.colorScheme.error)
             }
 
+            // Foto del evento (opcional)
+            Text("Foto del evento (opcional)", style = MaterialTheme.typography.labelMedium)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { imagePickerLauncher.launch("image/*") },
+                contentAlignment = Alignment.Center
+            ) {
+                if (selectedImageUri != null) {
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("📷", style = MaterialTheme.typography.headlineMedium)
+                        Text("Toca para agregar foto",
+                            style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    }
+                }
+            }
+
             Button(
                 onClick = {
                     // Validaciones
@@ -205,6 +251,18 @@ fun CreateEventScreen(onEventCreated: () -> Unit, onBack: () -> Unit) {
                                     creatorName = user?.name ?: ""
                                 )
                                 val result = eventRepository.createEvent(event)
+
+                                if (result.isSuccess && selectedImageUri != null) {
+                                    val eventId = result.getOrNull()!!
+                                    val photoResult = storageRepository.uploadEventPhoto(selectedImageUri!!, eventId)
+                                    if (photoResult.isSuccess) {
+                                        eventRepository.updateEvent(
+                                            eventId,
+                                            mapOf("imageUrl" to photoResult.getOrNull()!!)
+                                        )
+                                    }
+                                }
+
                                 isLoading = false
                                 if (result.isSuccess) onEventCreated()
                                 else errorMessage = "Error al crear el evento, intenta de nuevo"

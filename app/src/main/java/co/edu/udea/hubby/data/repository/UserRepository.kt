@@ -81,4 +81,33 @@ class UserRepository {
             Result.failure(e)
         }
     }
+
+    // Actualizar foto de perfil
+    suspend fun updateProfilePhoto(photoUrl: String): Result<Unit> {
+        return try {
+            val uid = auth.currentUser!!.uid
+            db.collection("users").document(uid)
+                .update("photoUrl", photoUrl)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Actualizar perfil completo
+    suspend fun updateProfile(name: String, career: String): Result<Unit> {
+        return try {
+            val uid = auth.currentUser!!.uid
+            db.collection("users").document(uid)
+                .update(mapOf(
+                    "name" to name,
+                    "career" to career
+                ))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

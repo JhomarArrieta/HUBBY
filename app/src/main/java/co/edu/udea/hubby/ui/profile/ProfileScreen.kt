@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.edu.udea.hubby.data.model.Event
@@ -21,6 +22,7 @@ import co.edu.udea.hubby.data.model.User
 import co.edu.udea.hubby.data.repository.UserRepository
 import co.edu.udea.hubby.ui.events.StatusChip
 import co.edu.udea.hubby.utils.getCategoryEmoji
+import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,7 +33,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
-    onEventClick: (String) -> Unit
+    onEventClick: (String) -> Unit,
+    onEditProfile: () -> Unit
 ) {
     val userRepository = remember { UserRepository() }
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -104,6 +107,11 @@ fun ProfileScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    TextButton(onClick = onEditProfile) {
+                        Text("Editar")
                     }
                 }
             )
@@ -182,23 +190,35 @@ fun ProfileHeader(user: User?, onChangeCampus: () -> Unit) {
             .background(MaterialTheme.colorScheme.primary)
             .padding(24.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()) {
-
-            // Avatar con inicial
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = user?.name?.firstOrNull()?.uppercase() ?: "?",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Avatar con foto o inicial
+            if (!user?.photoUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = user?.photoUrl,
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = user?.name?.firstOrNull()?.uppercase() ?: "?",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -212,7 +232,6 @@ fun ProfileHeader(user: User?, onChangeCampus: () -> Unit) {
                 color = Color.White.copy(alpha = 0.9f))
             Spacer(Modifier.height(12.dp))
 
-            // Campus clickeable
             OutlinedButton(
                 onClick = onChangeCampus,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
